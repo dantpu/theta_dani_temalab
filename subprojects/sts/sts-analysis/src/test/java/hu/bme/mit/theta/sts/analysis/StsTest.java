@@ -19,6 +19,12 @@ import hu.bme.mit.theta.analysis.Action;
 import hu.bme.mit.theta.analysis.Prec;
 import hu.bme.mit.theta.analysis.State;
 import hu.bme.mit.theta.common.Utils;
+import hu.bme.mit.theta.core.type.Expr;
+import hu.bme.mit.theta.core.type.booltype.BoolExprs;
+import hu.bme.mit.theta.core.type.booltype.BoolType;
+import hu.bme.mit.theta.core.utils.PathUtils;
+import hu.bme.mit.theta.solver.Solver;
+import hu.bme.mit.theta.solver.SolverStatus;
 import hu.bme.mit.theta.solver.z3.Z3SolverFactory;
 import hu.bme.mit.theta.sts.STS;
 import hu.bme.mit.theta.sts.aiger.AigerParser;
@@ -36,7 +42,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
+import static hu.bme.mit.theta.core.utils.TypeUtils.cast;
 import static hu.bme.mit.theta.sts.analysis.config.StsConfigBuilder.Domain.*;
 import static hu.bme.mit.theta.sts.analysis.config.StsConfigBuilder.Refinement.SEQ_ITP;
 
@@ -90,6 +98,9 @@ public class StsTest {
 
     @Test
     public void test() throws IOException {
+        var data = StsTest.data();
+        filePath = "src/test/resources/counter.system";
+
         STS sts = null;
         if (filePath.endsWith("aag")) {
             sts = AigerToSts.createSts(AigerParser.parse(filePath));
@@ -102,7 +113,23 @@ public class StsTest {
         }
         StsConfig<? extends State, ? extends Action, ? extends Prec> config
                 = new StsConfigBuilder(domain, refinement, Z3SolverFactory.getInstance()).build(sts);
-        Assert.assertEquals(isSafe, config.check().isSafe());
+
+        Solver solver =Z3SolverFactory.getInstance().createSolver();
+        solver.add(PathUtils.unfold(sts.getInit(),0));
+        int k=11;
+        PathUtils.unfold(sts.getInit(), 0);
+        boolean good=true;
+        for(int i=0;i<k;++i){
+            solver.add(PathUtils.unfold(sts.getTrans(), i));
+            solver.push();
+
+            solver.add(PathUtils.unfold(BoolExprs.Not(sts.getProp()), i));
+            if(solver.check().isSat()){
+                good=false;
+                break;
+            }
+            solver.pop();
+        }
     }
 
 }

@@ -36,6 +36,8 @@ public final class StsConfig<S extends State, A extends Action, P extends Prec> 
         return new StsConfig<>(checker, initPrec);
     }
 
+
+
     public SafetyResult<S, A> check() {
         return checker.check(initPrec);
     }
