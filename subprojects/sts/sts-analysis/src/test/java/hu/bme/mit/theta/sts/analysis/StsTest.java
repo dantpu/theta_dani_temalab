@@ -23,6 +23,8 @@ import hu.bme.mit.theta.solver.z3.Z3SolverFactory;
 import hu.bme.mit.theta.sts.STS;
 import hu.bme.mit.theta.sts.aiger.AigerParser;
 import hu.bme.mit.theta.sts.aiger.AigerToSts;
+import hu.bme.mit.theta.sts.analysis.checkers.BMCChecker;
+import hu.bme.mit.theta.sts.analysis.checkers.KInductionChecker;
 import hu.bme.mit.theta.sts.analysis.config.StsConfig;
 import hu.bme.mit.theta.sts.analysis.config.StsConfigBuilder;
 import hu.bme.mit.theta.sts.dsl.StsDslManager;
@@ -107,7 +109,7 @@ public class StsTest {
         StsConfig<? extends State, ? extends Action, ? extends Prec> config
                 = new StsConfigBuilder(domain, refinement, Z3SolverFactory.getInstance()).build(sts);
 
-        Checker checker = new Checker(sts);
+        KInductionChecker checker = new KInductionChecker(sts, Z3SolverFactory.getInstance());
 
         Assert.assertEquals(isSafe, checker.check());
     }
